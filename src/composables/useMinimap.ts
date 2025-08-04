@@ -1,4 +1,4 @@
-import type { LGraphNode } from '@comfyorg/litegraph'
+import { LGraphEventMode, LGraphNode } from '@comfyorg/litegraph'
 import { useRafFn, useThrottleFn } from '@vueuse/core'
 import { computed, nextTick, ref, watch } from 'vue'
 
@@ -9,6 +9,7 @@ import { app } from '@/scripts/app'
 import { useCanvasStore } from '@/stores/graphStore'
 import { useSettingStore } from '@/stores/settingStore'
 import { useColorPaletteStore } from '@/stores/workspace/colorPaletteStore'
+import { adjustColor } from '@/utils/colorUtil'
 
 interface GraphCallbacks {
   onNodeAdded?: (node: LGraphNode) => void
@@ -61,10 +62,10 @@ export function useMinimap() {
     () => colorPaletteStore.completedActivePalette.light_theme
   )
   const nodeColor = computed(
-    () => (isLightTheme.value ? '#3DA8E099' : '#0B8CE999') // lighter blue for light theme
+    () => (isLightTheme.value ? '#E3E3E3' : '#515151') // lighter blue for light theme
   )
   const linkColor = computed(
-    () => (isLightTheme.value ? '#FFB347' : '#F99614') // lighter orange for light theme
+    () => (isLightTheme.value ? '#171717' : '#969696') // lighter orange for light theme
   )
   const slotColor = computed(() => linkColor.value)
 
@@ -111,7 +112,7 @@ export function useMinimap() {
   const containerStyles = computed(() => ({
     width: `${width}px`,
     height: `${height}px`,
-    backgroundColor: isLightTheme.value ? '#FAF9F5' : '#15161C',
+    backgroundColor: isLightTheme.value ? '#A1A1A1' : '#15161C',
     border: `1px solid ${isLightTheme.value ? '#ccc' : '#333'}`,
     borderRadius: '8px'
   }))
@@ -189,6 +190,25 @@ export function useMinimap() {
     return Math.min(scaleX, scaleY) * 0.9
   }
 
+  const renderGroups = (
+    ctx: CanvasRenderingContext2D,
+    offsetX: number,
+    offsetY: number
+  ) => {
+    const g = graph.value
+    if (!g || !g._groups || g._groups.length === 0) return
+
+    for (const group of g._groups) {
+      const x = (group.pos[0] - bounds.value.minX) * scale.value + offsetX
+      const y = (group.pos[1] - bounds.value.minY) * scale.value + offsetY
+      const w = group.size[0] * scale.value
+      const h = group.size[1] * scale.value
+
+      ctx.fillStyle = group.color || '#ccc'
+      ctx.fillRect(x, y, w, h)
+    }
+  }
+
   const renderNodes = (
     ctx: CanvasRenderingContext2D,
     offsetX: number,
@@ -203,8 +223,20 @@ export function useMinimap() {
       const w = node.size[0] * scale.value
       const h = node.size[1] * scale.value
 
+      let color = nodeColor.value
+
+      if (node.color) {
+        color = adjustColor(node.color, { lightness: 0.1 })
+      }
+
+      if (node.mode === LGraphEventMode.BYPASS) {
+        color = isLightTheme.value ? '#DBDBDB' : '#441B44'
+      } else if (isLightTheme.value) {
+        color = adjustColor(color, { lightness: 0.5 })
+      }
+
       // Render solid node blocks
-      ctx.fillStyle = nodeColor.value
+      ctx.fillStyle = color
       ctx.fillRect(x, y, w, h)
     }
   }
@@ -218,9 +250,9 @@ export function useMinimap() {
     if (!g) return
 
     ctx.strokeStyle = linkColor.value
-    ctx.lineWidth = 1.4
+    ctx.lineWidth = 0.3
 
-    const slotRadius = 3.7 * Math.max(scale.value, 0.5) // Larger slots that scale
+    const slotRadius = Math.max(scale.value, 0.5) // Larger slots that scale
     const connections: Array<{
       x1: number
       y1: number
@@ -304,8 +336,11 @@ export function useMinimap() {
       const offsetX = (width - bounds.value.width * scale.value) / 2
       const offsetY = (height - bounds.value.height * scale.value) / 2
 
-      renderNodes(ctx, offsetX, offsetY)
+      renderGroups(ctx, offsetX, offsetY)
+
       renderConnections(ctx, offsetX, offsetY)
+
+      renderNodes(ctx, offsetX, offsetY)
 
       needsFullRedraw.value = false
       updateFlags.value.nodes = false
