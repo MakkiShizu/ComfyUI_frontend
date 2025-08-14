@@ -1,4 +1,5 @@
-import { expect, describe, it, beforeEach } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
+
 import { CanvasPointer } from '../src/CanvasPointer'
 
 describe('CanvasPointer', () => {
@@ -29,7 +30,7 @@ describe('CanvasPointer', () => {
         events.forEach((eventData, index) => {
           const event = new WheelEvent('wheel', eventData)
           const isTrackpad = pointer.isTrackpadGesture(event)
-          
+
           // After 3 events, detent pattern should be detected
           if (index >= 2) {
             expect(isTrackpad).toBe(false) // Should be detected as mouse wheel
@@ -50,7 +51,7 @@ describe('CanvasPointer', () => {
         events.forEach((eventData) => {
           const event = new WheelEvent('wheel', eventData)
           const isTrackpad = pointer.isTrackpadGesture(event)
-          
+
           // These values exceed threshold (60), so would be mouse wheel anyway
           expect(isTrackpad).toBe(false)
         })
@@ -68,11 +69,11 @@ describe('CanvasPointer', () => {
         events.forEach((eventData) => {
           const event = new WheelEvent('wheel', eventData)
           const isTrackpad = pointer.isTrackpadGesture(event)
-          
+
           // Should be detected as trackpad (small values, no valid detent)
           expect(isTrackpad).toBe(true)
         })
-        
+
         // GCD would be 3, which is below minDetentValue of 5
         expect(pointer.detectedDetent).toBeNull()
       })
@@ -91,7 +92,7 @@ describe('CanvasPointer', () => {
         events.forEach((eventData) => {
           const event = new WheelEvent('wheel', eventData)
           const isTrackpad = pointer.isTrackpadGesture(event)
-          
+
           // Should be detected as trackpad (fractional values)
           expect(isTrackpad).toBe(true)
         })
@@ -113,7 +114,7 @@ describe('CanvasPointer', () => {
           deltaX: 0,
           timeStamp: 100
         })
-        
+
         const event2 = new WheelEvent('wheel', {
           deltaY: 100, // Large value, but within continuation window
           deltaX: 0,
@@ -134,7 +135,7 @@ describe('CanvasPointer', () => {
           value: 100,
           writable: false
         })
-        
+
         const event2 = new WheelEvent('wheel', {
           deltaY: 100,
           deltaX: 0
@@ -169,7 +170,7 @@ describe('CanvasPointer', () => {
           deltaX: 0,
           timeStamp: 100
         })
-        
+
         const event2 = new WheelEvent('wheel', {
           deltaY: 8,
           deltaX: 0,
@@ -261,7 +262,7 @@ describe('CanvasPointer', () => {
         events.forEach((eventData, index) => {
           const event = new WheelEvent('wheel', eventData)
           pointer.isTrackpadGesture(event)
-          
+
           if (index >= 2) {
             // Should detect detent of 10 despite mixed signs
             expect(pointer.detectedDetent).toBe(10)
