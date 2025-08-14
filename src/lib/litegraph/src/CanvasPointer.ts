@@ -384,6 +384,35 @@ export class CanvasPointer {
   }
 
   /**
+   * Additional heuristics for trackpad detection
+   * @param e The wheel event to check
+   * @returns `true` if heuristics suggest trackpad, otherwise `false`
+   */
+  #additionalTrackpadHeuristics(e: WheelEvent): boolean {
+    // Check if deltaX is significant (trackpads often have horizontal scroll)
+    if (Math.abs(e.deltaX) > 0 && Math.abs(e.deltaX) < 60) {
+      // Non-zero deltaX under threshold suggests 2D trackpad scrolling
+      return true
+    }
+
+    // Check for non-integer values (trackpads often produce fractional values)
+    if (!Number.isInteger(e.deltaY) && Math.abs(e.deltaY) < 60) {
+      return true
+    }
+
+    // Check deltaMode (some browsers report differently for trackpads)
+    if (e.deltaMode === 0) {
+      // DOM_DELTA_PIXEL mode
+      // Check for very small pixel values typical of trackpads
+      if (Math.abs(e.deltaY) < 10 && Math.abs(e.deltaY) > 0) {
+        return true
+      }
+    }
+
+    return false
+  }
+
+  /**
    * Checks if the given wheel event is part of a trackpad gesture.
    * @param e The wheel event to check
    * @returns `true` if the event is part of a trackpad gesture, otherwise `false`
@@ -394,6 +423,12 @@ export class CanvasPointer {
 
     // Check if this is a continuation of a trackpad gesture
     if (this.#isContinuationOfGesture(e)) {
+      this.lastTrackpadEvent = e
+      return true
+    }
+
+    // Check additional heuristics first (quick checks)
+    if (this.#additionalTrackpadHeuristics(e)) {
       this.lastTrackpadEvent = e
       return true
     }
