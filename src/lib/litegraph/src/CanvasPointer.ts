@@ -93,6 +93,25 @@ export class CanvasPointer {
   /** The last pointermove event that was treated as a trackpad gesture. */
   lastTrackpadEvent?: WheelEvent
 
+  /** Recent wheel events for detent pattern detection */
+  recentWheelDeltas: { deltaY: number; deltaX: number; timestamp: number }[] =
+    []
+
+  /** Detected mouse wheel detent value (base increment) */
+  detectedDetent: number | null = null
+
+  /** Maximum number of recent wheel events to track */
+  static readonly maxRecentDeltas = 10
+
+  /** Minimum detent value to consider as mouse wheel */
+  static readonly minDetentValue = 5
+
+  /** Minimum events needed to detect detent pattern */
+  static readonly detentDetectionThreshold = 3
+
+  /** Enable detent-based detection (can be disabled for testing) */
+  static detentDetectionEnabled = true
+
   /**
    * If set, as soon as the mouse moves outside the click drift threshold, this action is run once.
    * @param pointer [DEPRECATED] This parameter will be removed in a future release.
@@ -271,6 +290,83 @@ export class CanvasPointer {
     this.dragStarted = true
     this.onDragStart?.(this, eMove)
     delete this.onDragStart
+  }
+
+  /**
+   * Calculate Greatest Common Divisor using Euclidean algorithm
+   * @param a First number
+   * @param b Second number
+   * @returns The GCD of a and b
+   */
+  #gcd(a: number, b: number): number {
+    a = Math.abs(Math.round(a)) // Round to handle floating point
+    b = Math.abs(Math.round(b))
+    while (b !== 0) {
+      const temp = b
+      b = a % b
+      a = temp
+    }
+    return a
+  }
+
+  /**
+   * Update the recent wheel events buffer
+   * @param e The wheel event to add
+   */
+  #updateRecentDeltas(e: WheelEvent): void {
+    const now = e.timeStamp
+
+    // Remove old events (> 500ms old)
+    this.recentWheelDeltas = this.recentWheelDeltas.filter(
+      (event) => now - event.timestamp < 500
+    )
+
+    // Add new event if deltaY is significant
+    if (Math.abs(e.deltaY) > 0.5) {
+      this.recentWheelDeltas.push({
+        deltaY: e.deltaY,
+        deltaX: e.deltaX,
+        timestamp: now
+      })
+
+      // Keep only the most recent events
+      if (this.recentWheelDeltas.length > CanvasPointer.maxRecentDeltas) {
+        this.recentWheelDeltas.shift()
+      }
+    }
+  }
+
+  /**
+   * Detect if recent deltaY values follow a detent pattern
+   * @returns The detected detent value, or null if no pattern found
+   */
+  #detectDetentPattern(): number | null {
+    // Need at least threshold events to detect pattern
+    if (
+      this.recentWheelDeltas.length < CanvasPointer.detentDetectionThreshold
+    ) {
+      return null
+    }
+
+    // Get absolute deltaY values from recent events
+    const deltas = this.recentWheelDeltas
+      .map((e) => Math.abs(Math.round(e.deltaY)))
+      .filter((d) => d > 0) // Ignore zero values
+
+    if (deltas.length < 2) return null
+
+    // Calculate GCD of all delta values
+    let currentGCD = deltas[0]
+    for (let i = 1; i < deltas.length; i++) {
+      currentGCD = this.#gcd(currentGCD, deltas[i])
+      // Early exit if GCD becomes too small
+      if (currentGCD < CanvasPointer.minDetentValue) {
+        return null
+      }
+    }
+
+    // Only consider it a detent if >= minimum value
+    return currentGCD >= CanvasPointer.minDetentValue ? currentGCD : null
   }
 
   /**
