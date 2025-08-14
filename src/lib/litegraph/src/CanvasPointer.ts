@@ -332,18 +332,24 @@ export class CanvasPointer {
         ) {
           // Update to the smaller detent value
           this.lastIntegerDelta = potentialDetent
+          // Clear lastTrackpadEvent since this is a mouse wheel
+          this.lastTrackpadEvent = undefined
           return false // Mouse wheel detected
         }
+      } else {
+        // Store this as potential detent for next time (only if we don't have one yet)
+        this.lastIntegerDelta = absY
       }
-      // Store this as potential detent for next time
-      this.lastIntegerDelta = absY
     }
 
-    // Threshold check
+    // Threshold check - but don't mark as trackpad if it could be a mouse wheel
     const isTrackpad = absX < threshold && absY < threshold
 
-    // IMPORTANT FIX: Save the event if detected as trackpad
-    if (isTrackpad) {
+    // Only save as trackpad if we're not potentially tracking a mouse wheel pattern
+    if (
+      isTrackpad &&
+      !(Number.isInteger(e.deltaY) && absY > 0 && this.lastIntegerDelta)
+    ) {
       this.lastTrackpadEvent = e
     }
 
