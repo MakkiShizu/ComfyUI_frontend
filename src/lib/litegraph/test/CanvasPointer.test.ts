@@ -11,7 +11,6 @@ describe('CanvasPointer', () => {
     pointer = new CanvasPointer(element)
     // Reset static configuration
     CanvasPointer.trackpadThreshold = 60
-    CanvasPointer.detentDetectionEnabled = true
   })
 
   describe('isTrackpadGesture', () => {
@@ -19,22 +18,25 @@ describe('CanvasPointer', () => {
       it('should detect mouse wheel with consistent detent of 10 (Linux high DPI)', () => {
         // Simulate Linux high DPI mouse wheel events with detent = 10
         const events = [
-          { deltaY: 10, deltaX: 0, timeStamp: 100 },
-          { deltaY: 20, deltaX: 0, timeStamp: 150 },
-          { deltaY: 10, deltaX: 0, timeStamp: 200 },
-          { deltaY: 40, deltaX: 0, timeStamp: 250 },
-          { deltaY: 10, deltaX: 0, timeStamp: 300 }
+          { deltaY: 10, deltaX: 0 },
+          { deltaY: 20, deltaX: 0 },
+          { deltaY: 10, deltaX: 0 },
+          { deltaY: 40, deltaX: 0 },
+          { deltaY: 10, deltaX: 0 }
         ]
 
-        // First few events might be detected as trackpad until pattern emerges
+        // First event stores the delta, second event detects the pattern
         events.forEach((eventData, index) => {
           const event = new WheelEvent('wheel', eventData)
           const isTrackpad = pointer.isTrackpadGesture(event)
 
-          // After 3 events, detent pattern should be detected
-          if (index >= 2) {
+          // After 2 events where both are multiples of 10, the pattern should be detected
+          // First event: stores 10
+          // Second event: 20 is multiple of 10, detects mouse wheel
+          // Third+ events: continue detecting mouse wheel
+          if (index >= 1) {
             expect(isTrackpad).toBe(false) // Should be detected as mouse wheel
-            expect(pointer.detectedDetent).toBe(10)
+            expect(pointer.lastIntegerDelta).toBe(10)
           }
         })
       })
@@ -42,10 +44,10 @@ describe('CanvasPointer', () => {
       it('should detect mouse wheel with consistent detent of 120 (traditional)', () => {
         // Traditional mouse wheel with detent = 120
         const events = [
-          { deltaY: 120, deltaX: 0, timeStamp: 100 },
-          { deltaY: -120, deltaX: 0, timeStamp: 200 },
-          { deltaY: 240, deltaX: 0, timeStamp: 300 },
-          { deltaY: 120, deltaX: 0, timeStamp: 400 }
+          { deltaY: 120, deltaX: 0 },
+          { deltaY: -120, deltaX: 0 },
+          { deltaY: 240, deltaX: 0 },
+          { deltaY: 120, deltaX: 0 }
         ]
 
         events.forEach((eventData) => {
@@ -60,10 +62,10 @@ describe('CanvasPointer', () => {
       it('should not detect detent for values below minimum threshold', () => {
         // Very small values that have GCD < 5
         const events = [
-          { deltaY: 3, deltaX: 0, timeStamp: 100 },
-          { deltaY: 6, deltaX: 0, timeStamp: 150 },
-          { deltaY: 3, deltaX: 0, timeStamp: 200 },
-          { deltaY: 9, deltaX: 0, timeStamp: 250 }
+          { deltaY: 3, deltaX: 0 },
+          { deltaY: 6, deltaX: 0 },
+          { deltaY: 3, deltaX: 0 },
+          { deltaY: 9, deltaX: 0 }
         ]
 
         events.forEach((eventData) => {
@@ -74,8 +76,8 @@ describe('CanvasPointer', () => {
           expect(isTrackpad).toBe(true)
         })
 
-        // GCD would be 3, which is below minDetentValue of 5
-        expect(pointer.detectedDetent).toBeNull()
+        // The lastIntegerDelta would be 3 from the first event
+        expect(pointer.lastIntegerDelta).toBe(3)
       })
     })
 
@@ -83,10 +85,10 @@ describe('CanvasPointer', () => {
       it('should detect trackpad with smooth scrolling values', () => {
         // Trackpad with smooth, non-detent values
         const events = [
-          { deltaY: 2.5, deltaX: 0, timeStamp: 100 },
-          { deltaY: 5.75, deltaX: 0.25, timeStamp: 110 },
-          { deltaY: 8.333, deltaX: 0, timeStamp: 120 },
-          { deltaY: 3.14159, deltaX: 0, timeStamp: 130 }
+          { deltaY: 2.5, deltaX: 0 },
+          { deltaY: 5.75, deltaX: 0.25 },
+          { deltaY: 8.333, deltaX: 0 },
+          { deltaY: 3.14159, deltaX: 0 }
         ]
 
         events.forEach((eventData) => {
@@ -101,8 +103,7 @@ describe('CanvasPointer', () => {
       it('should detect trackpad with horizontal scrolling', () => {
         const event = new WheelEvent('wheel', {
           deltaY: 5,
-          deltaX: 10, // Non-zero deltaX suggests 2D scrolling
-          timeStamp: 100
+          deltaX: 10 // Non-zero deltaX suggests 2D scrolling
         })
 
         expect(pointer.isTrackpadGesture(event)).toBe(true)
@@ -111,14 +112,12 @@ describe('CanvasPointer', () => {
       it('should detect trackpad continuation within time gap', () => {
         const event1 = new WheelEvent('wheel', {
           deltaY: 5,
-          deltaX: 0,
-          timeStamp: 100
+          deltaX: 0
         })
 
         const event2 = new WheelEvent('wheel', {
           deltaY: 100, // Large value, but within continuation window
-          deltaX: 0,
-          timeStamp: 150 // Within trackpadMaxGap (200ms)
+          deltaX: 0 // Within trackpadMaxGap (200ms)
         })
 
         pointer.isTrackpadGesture(event1)
@@ -155,8 +154,7 @@ describe('CanvasPointer', () => {
       it('should save lastTrackpadEvent on initial detection', () => {
         const event = new WheelEvent('wheel', {
           deltaY: 5,
-          deltaX: 0,
-          timeStamp: 100
+          deltaX: 0
         })
 
         expect(pointer.lastTrackpadEvent).toBeUndefined()
@@ -167,14 +165,12 @@ describe('CanvasPointer', () => {
       it('should update lastTrackpadEvent on continuation', () => {
         const event1 = new WheelEvent('wheel', {
           deltaY: 5,
-          deltaX: 0,
-          timeStamp: 100
+          deltaX: 0
         })
 
         const event2 = new WheelEvent('wheel', {
           deltaY: 8,
-          deltaX: 0,
-          timeStamp: 150
+          deltaX: 0
         })
 
         pointer.isTrackpadGesture(event1)
@@ -187,8 +183,7 @@ describe('CanvasPointer', () => {
       it('should detect trackpad with non-integer deltaY', () => {
         const event = new WheelEvent('wheel', {
           deltaY: 5.5, // Non-integer value
-          deltaX: 0,
-          timeStamp: 100
+          deltaX: 0
         })
 
         expect(pointer.isTrackpadGesture(event)).toBe(true)
@@ -198,8 +193,7 @@ describe('CanvasPointer', () => {
         const event = new WheelEvent('wheel', {
           deltaY: 3,
           deltaX: 0,
-          deltaMode: 0, // DOM_DELTA_PIXEL
-          timeStamp: 100
+          deltaMode: 0 // DOM_DELTA_PIXEL
         })
 
         expect(pointer.isTrackpadGesture(event)).toBe(true)
@@ -207,33 +201,12 @@ describe('CanvasPointer', () => {
     })
 
     describe('configuration', () => {
-      it('should respect detentDetectionEnabled flag', () => {
-        CanvasPointer.detentDetectionEnabled = false
-
-        // Events that would normally trigger detent detection
-        const events = [
-          { deltaY: 10, deltaX: 0, timeStamp: 100 },
-          { deltaY: 20, deltaX: 0, timeStamp: 150 },
-          { deltaY: 10, deltaX: 0, timeStamp: 200 },
-          { deltaY: 30, deltaX: 0, timeStamp: 250 }
-        ]
-
-        events.forEach((eventData) => {
-          const event = new WheelEvent('wheel', eventData)
-          pointer.isTrackpadGesture(event)
-        })
-
-        // Detent should not be detected when disabled
-        expect(pointer.detectedDetent).toBeNull()
-      })
-
       it('should respect trackpadThreshold configuration', () => {
         CanvasPointer.trackpadThreshold = 30
 
         const event = new WheelEvent('wheel', {
           deltaY: 40, // Above new threshold
-          deltaX: 0,
-          timeStamp: 100
+          deltaX: 0
         })
 
         expect(pointer.isTrackpadGesture(event)).toBe(false)
@@ -244,8 +217,7 @@ describe('CanvasPointer', () => {
       it('should handle zero deltaY values', () => {
         const event = new WheelEvent('wheel', {
           deltaY: 0,
-          deltaX: 0,
-          timeStamp: 100
+          deltaX: 0
         })
 
         expect(pointer.isTrackpadGesture(event)).toBe(true)
@@ -253,50 +225,42 @@ describe('CanvasPointer', () => {
 
       it('should handle negative deltaY values in detent detection', () => {
         const events = [
-          { deltaY: -10, deltaX: 0, timeStamp: 100 },
-          { deltaY: 20, deltaX: 0, timeStamp: 150 },
-          { deltaY: -30, deltaX: 0, timeStamp: 200 },
-          { deltaY: 10, deltaX: 0, timeStamp: 250 }
+          { deltaY: -10, deltaX: 0 },
+          { deltaY: 20, deltaX: 0 },
+          { deltaY: -30, deltaX: 0 },
+          { deltaY: 10, deltaX: 0 }
         ]
 
         events.forEach((eventData, index) => {
           const event = new WheelEvent('wheel', eventData)
           pointer.isTrackpadGesture(event)
 
-          if (index >= 2) {
+          if (index >= 1) {
             // Should detect detent of 10 despite mixed signs
-            expect(pointer.detectedDetent).toBe(10)
+            expect(pointer.lastIntegerDelta).toBe(10)
           }
         })
       })
 
-      it('should clear old events from buffer', () => {
-        // Add old event
-        const oldEvent = new WheelEvent('wheel', {
+      it('should detect mouse wheel pattern regardless of time gap', () => {
+        // Add first event
+        const event1 = new WheelEvent('wheel', {
           deltaY: 10,
           deltaX: 0
         })
-        // Mock timestamp
-        Object.defineProperty(oldEvent, 'timeStamp', {
-          value: 100,
-          writable: false
-        })
-        pointer.isTrackpadGesture(oldEvent)
+        pointer.isTrackpadGesture(event1)
+        expect(pointer.lastIntegerDelta).toBe(10)
 
-        // Add new event after 600ms (beyond 500ms window)
-        const newEvent = new WheelEvent('wheel', {
+        // Add second event - should detect mouse wheel pattern
+        const event2 = new WheelEvent('wheel', {
           deltaY: 20,
           deltaX: 0
         })
-        // Mock timestamp to be 600ms later
-        Object.defineProperty(newEvent, 'timeStamp', {
-          value: 700,
-          writable: false
-        })
-        pointer.isTrackpadGesture(newEvent)
+        const isTrackpad = pointer.isTrackpadGesture(event2)
 
-        // Buffer should only contain the new event
-        expect(pointer.recentWheelDeltas.length).toBe(1)
+        // Should detect as mouse wheel (both are multiples of 10)
+        expect(isTrackpad).toBe(false)
+        expect(pointer.lastIntegerDelta).toBe(10) // The detected detent
       })
     })
   })
