@@ -389,13 +389,47 @@ export class CanvasPointer {
    * @returns `true` if the event is part of a trackpad gesture, otherwise `false`
    */
   isTrackpadGesture(e: WheelEvent): boolean {
+    // Update recent events buffer
+    this.#updateRecentDeltas(e)
+
+    // Check if this is a continuation of a trackpad gesture
     if (this.#isContinuationOfGesture(e)) {
       this.lastTrackpadEvent = e
       return true
     }
 
+    // Try detent-based detection if enabled
+    if (CanvasPointer.detentDetectionEnabled) {
+      const detent = this.#detectDetentPattern()
+
+      if (detent !== null) {
+        this.detectedDetent = detent
+
+        // Check if current deltaY is a multiple of the detent
+        const roundedDelta = Math.abs(Math.round(e.deltaY))
+        if (roundedDelta > 0) {
+          const remainder = roundedDelta % detent
+          const isMultipleOfDetent = remainder === 0 || remainder < 0.5
+
+          if (isMultipleOfDetent) {
+            // This is a mouse wheel event
+            return false
+          }
+        }
+      }
+    }
+
+    // Fallback to threshold-based detection
     const threshold = CanvasPointer.trackpadThreshold
-    return Math.abs(e.deltaX) < threshold && Math.abs(e.deltaY) < threshold
+    const isTrackpad =
+      Math.abs(e.deltaX) < threshold && Math.abs(e.deltaY) < threshold
+
+    // IMPORTANT FIX: Save the event if detected as trackpad
+    if (isTrackpad) {
+      this.lastTrackpadEvent = e
+    }
+
+    return isTrackpad
   }
 
   /**
