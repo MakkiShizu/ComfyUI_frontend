@@ -316,10 +316,12 @@ export class CanvasPointer {
   #updateRecentDeltas(e: WheelEvent): void {
     const now = e.timeStamp
 
-    // Remove old events (> 500ms old)
-    this.recentWheelDeltas = this.recentWheelDeltas.filter(
-      (event) => now - event.timestamp < 500
-    )
+    // Remove old events (> 500ms old) - but only if this isn't the first event
+    if (this.recentWheelDeltas.length > 0) {
+      this.recentWheelDeltas = this.recentWheelDeltas.filter(
+        (event) => now - event.timestamp < 500
+      )
+    }
 
     // Add new event if deltaY is significant
     if (Math.abs(e.deltaY) > 0.5) {
@@ -400,11 +402,17 @@ export class CanvasPointer {
       return true
     }
 
+    // Don't use small value heuristic if we have a detected detent that could match
+    if (this.detectedDetent && this.detectedDetent <= 10) {
+      return false
+    }
+
     // Check deltaMode (some browsers report differently for trackpads)
     if (e.deltaMode === 0) {
       // DOM_DELTA_PIXEL mode
       // Check for very small pixel values typical of trackpads
-      if (Math.abs(e.deltaY) < 10 && Math.abs(e.deltaY) > 0) {
+      // But only if they're not integers (which could be mouse wheel)
+      if (Math.abs(e.deltaY) < 5 && !Number.isInteger(e.deltaY)) {
         return true
       }
     }
@@ -421,19 +429,9 @@ export class CanvasPointer {
     // Update recent events buffer
     this.#updateRecentDeltas(e)
 
-    // Check if this is a continuation of a trackpad gesture
-    if (this.#isContinuationOfGesture(e)) {
-      this.lastTrackpadEvent = e
-      return true
-    }
-
-    // Check additional heuristics first (quick checks)
-    if (this.#additionalTrackpadHeuristics(e)) {
-      this.lastTrackpadEvent = e
-      return true
-    }
-
-    // Try detent-based detection if enabled
+    // Try detent-based detection FIRST if enabled
+    // This needs to happen before continuation check to properly detect mouse wheels
+    let detectedAsMouseWheel = false
     if (CanvasPointer.detentDetectionEnabled) {
       const detent = this.#detectDetentPattern()
 
@@ -447,11 +445,30 @@ export class CanvasPointer {
           const isMultipleOfDetent = remainder === 0 || remainder < 0.5
 
           if (isMultipleOfDetent) {
-            // This is a mouse wheel event
+            // This is a mouse wheel event - clear any previous trackpad state
+            detectedAsMouseWheel = true
+            this.lastTrackpadEvent = undefined
             return false
           }
         }
       }
+    }
+
+    // Check if this is a continuation of a trackpad gesture
+    // But skip this if we detected a mouse wheel pattern
+    if (!detectedAsMouseWheel) {
+      const isContinuation = this.#isContinuationOfGesture(e)
+      if (isContinuation) {
+        this.lastTrackpadEvent = e
+        return true
+      }
+    }
+
+    // Check additional heuristics (but not for small integer values that might be mouse wheel)
+    const heuristic = this.#additionalTrackpadHeuristics(e)
+    if (heuristic) {
+      this.lastTrackpadEvent = e
+      return true
     }
 
     // Fallback to threshold-based detection
