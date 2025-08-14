@@ -296,12 +296,6 @@ export class CanvasPointer {
    * @returns `true` if the event is part of a trackpad gesture, otherwise `false`
    */
   isTrackpadGesture(e: WheelEvent): boolean {
-    // Check if this is a continuation of a trackpad gesture
-    if (this.#isContinuationOfGesture(e)) {
-      this.lastTrackpadEvent = e
-      return true
-    }
-
     const absY = Math.abs(e.deltaY)
     const absX = Math.abs(e.deltaX)
     const threshold = CanvasPointer.trackpadThreshold
@@ -320,13 +314,16 @@ export class CanvasPointer {
     }
 
     // 3. For integer values under threshold, check if it's a mouse wheel pattern
+    // Track integer values for potential mouse wheel detection
     if (Number.isInteger(e.deltaY) && absY > 0 && absY < threshold) {
       // If we have a previous integer delta, check if this is a multiple
-      if (this.lastIntegerDelta && this.lastIntegerDelta > 0) {
+      if (this.lastIntegerDelta !== null && this.lastIntegerDelta > 0) {
         // Use the smaller value as the potential detent
         const potentialDetent = Math.min(absY, this.lastIntegerDelta)
         // Check if both values are multiples of the potential detent
+        // Only consider it a mouse wheel if the detent is >= 5 (common mouse wheel values)
         if (
+          potentialDetent >= 5 &&
           absY % potentialDetent === 0 &&
           this.lastIntegerDelta % potentialDetent === 0
         ) {
@@ -342,14 +339,18 @@ export class CanvasPointer {
       }
     }
 
-    // Threshold check - but don't mark as trackpad if it could be a mouse wheel
+    // 4. Check if this is a continuation of a trackpad gesture
+    // Do this AFTER checking for mouse wheel pattern to avoid false continuations
+    if (this.#isContinuationOfGesture(e)) {
+      this.lastTrackpadEvent = e
+      return true
+    }
+
+    // Threshold check
     const isTrackpad = absX < threshold && absY < threshold
 
-    // Only save as trackpad if we're not potentially tracking a mouse wheel pattern
-    if (
-      isTrackpad &&
-      !(Number.isInteger(e.deltaY) && absY > 0 && this.lastIntegerDelta)
-    ) {
+    // Save as trackpad event if detected as trackpad
+    if (isTrackpad) {
       this.lastTrackpadEvent = e
     }
 
