@@ -127,14 +127,22 @@ describe('CanvasPointer', () => {
       it('should not continue trackpad after time gap', () => {
         const event1 = new WheelEvent('wheel', {
           deltaY: 5,
-          deltaX: 0,
-          timeStamp: 100
+          deltaX: 0
+        })
+        // Mock timestamp
+        Object.defineProperty(event1, 'timeStamp', {
+          value: 100,
+          writable: false
         })
         
         const event2 = new WheelEvent('wheel', {
           deltaY: 100,
-          deltaX: 0,
-          timeStamp: 350 // Beyond trackpadMaxGap (200ms)
+          deltaX: 0
+        })
+        // Mock timestamp beyond trackpadMaxGap (200ms)
+        Object.defineProperty(event2, 'timeStamp', {
+          value: 350,
+          writable: false
         })
 
         pointer.isTrackpadGesture(event1)
@@ -265,16 +273,24 @@ describe('CanvasPointer', () => {
         // Add old event
         const oldEvent = new WheelEvent('wheel', {
           deltaY: 10,
-          deltaX: 0,
-          timeStamp: 100
+          deltaX: 0
+        })
+        // Mock timestamp
+        Object.defineProperty(oldEvent, 'timeStamp', {
+          value: 100,
+          writable: false
         })
         pointer.isTrackpadGesture(oldEvent)
 
         // Add new event after 600ms (beyond 500ms window)
         const newEvent = new WheelEvent('wheel', {
           deltaY: 20,
-          deltaX: 0,
-          timeStamp: 700
+          deltaX: 0
+        })
+        // Mock timestamp to be 600ms later
+        Object.defineProperty(newEvent, 'timeStamp', {
+          value: 700,
+          writable: false
         })
         pointer.isTrackpadGesture(newEvent)
 
