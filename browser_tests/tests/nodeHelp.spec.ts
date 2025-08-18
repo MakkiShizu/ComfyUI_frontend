@@ -524,9 +524,14 @@ This is English documentation.
       const ksamplerNodes = await comfyPage.getNodeRefsByType('KSampler')
       await selectNodeWithPan(comfyPage, ksamplerNodes[0])
 
-      const helpButton = comfyPage.page.locator(
-        '.selection-toolbox button:has(.pi-question-circle)'
-      )
+      // Wait for selection toolbox to appear
+      await comfyPage.page.waitForSelector('.selection-toolbox', {
+        state: 'visible'
+      })
+
+      const helpButton = comfyPage.page
+        .locator('.selection-toolbox button:has(.pi-question-circle)')
+        .first()
       await helpButton.click()
 
       const helpPage = comfyPage.page.locator('.sidebar-content-container')
@@ -539,10 +544,15 @@ This is English documentation.
       )
       await selectNodeWithPan(comfyPage, checkpointNodes[0])
 
+      // Wait for selection toolbox to appear
+      await comfyPage.page.waitForSelector('.selection-toolbox', {
+        state: 'visible'
+      })
+
       // Click help button again
-      const helpButton2 = comfyPage.page.locator(
-        '.selection-toolbox button:has(.pi-question-circle)'
-      )
+      const helpButton2 = comfyPage.page
+        .locator('.selection-toolbox button:has(.pi-question-circle)')
+        .first()
       await helpButton2.click()
 
       // Content should update

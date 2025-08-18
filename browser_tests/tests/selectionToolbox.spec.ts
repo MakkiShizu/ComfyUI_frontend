@@ -142,9 +142,9 @@ test.describe('Selection Toolbox', () => {
       })
 
       // Color picker button should be visible
-      const colorPickerButton = comfyPage.page.locator(
-        '.selection-toolbox .pi-circle-fill'
-      )
+      const colorPickerButton = comfyPage.page
+        .locator('.selection-toolbox .pi-circle-fill')
+        .first()
       await expect(colorPickerButton).toBeVisible()
 
       // Click color picker button
@@ -182,9 +182,9 @@ test.describe('Selection Toolbox', () => {
         state: 'visible'
       })
 
-      const colorPickerButton = comfyPage.page.locator(
-        '.selection-toolbox .pi-circle-fill'
-      )
+      const colorPickerButton = comfyPage.page
+        .locator('.selection-toolbox .pi-circle-fill')
+        .first()
 
       // Initially should show default color
       await expect(colorPickerButton).not.toHaveAttribute('color')
@@ -208,7 +208,10 @@ test.describe('Selection Toolbox', () => {
       await comfyPage.page.waitForSelector('.selection-toolbox', {
         state: 'visible'
       })
-      await comfyPage.page.locator('.selection-toolbox .pi-circle-fill').click()
+      await comfyPage.page
+        .locator('.selection-toolbox .pi-circle-fill')
+        .first()
+        .click()
       await comfyPage.page
         .locator('.color-picker-container i[data-testid="blue"]')
         .click()
@@ -219,7 +222,10 @@ test.describe('Selection Toolbox', () => {
       await comfyPage.page.waitForSelector('.selection-toolbox', {
         state: 'visible'
       })
-      await comfyPage.page.locator('.selection-toolbox .pi-circle-fill').click()
+      await comfyPage.page
+        .locator('.selection-toolbox .pi-circle-fill')
+        .first()
+        .click()
       await comfyPage.page
         .locator('.color-picker-container i[data-testid="red"]')
         .click()
@@ -231,9 +237,9 @@ test.describe('Selection Toolbox', () => {
       })
 
       // Color picker should show null/mixed state
-      const colorPickerButton = comfyPage.page.locator(
-        '.selection-toolbox .pi-circle-fill'
-      )
+      const colorPickerButton = comfyPage.page
+        .locator('.selection-toolbox .pi-circle-fill')
+        .first()
       await expect(colorPickerButton).not.toHaveAttribute('color')
     })
 
@@ -245,7 +251,10 @@ test.describe('Selection Toolbox', () => {
       await comfyPage.page.waitForSelector('.selection-toolbox', {
         state: 'visible'
       })
-      await comfyPage.page.locator('.selection-toolbox .pi-circle-fill').click()
+      await comfyPage.page
+        .locator('.selection-toolbox .pi-circle-fill')
+        .first()
+        .click()
       await comfyPage.page
         .locator('.color-picker-container i[data-testid="blue"]')
         .click()
@@ -260,9 +269,9 @@ test.describe('Selection Toolbox', () => {
       })
 
       // Color picker button should show the correct color
-      const colorPickerButton = comfyPage.page.locator(
-        '.selection-toolbox .pi-circle-fill'
-      )
+      const colorPickerButton = comfyPage.page
+        .locator('.selection-toolbox .pi-circle-fill')
+        .first()
       await expect(colorPickerButton).toHaveCSS('color', BLUE_COLOR)
     })
 
@@ -271,7 +280,10 @@ test.describe('Selection Toolbox', () => {
     }) => {
       // Select a node and color it
       await comfyPage.selectNodes(['KSampler'])
-      await comfyPage.page.locator('.selection-toolbox .pi-circle-fill').click()
+      await comfyPage.page
+        .locator('.selection-toolbox .pi-circle-fill')
+        .first()
+        .click()
       await comfyPage.page
         .locator('.color-picker-container i[data-testid="blue"]')
         .click()

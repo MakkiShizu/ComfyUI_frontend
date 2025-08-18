@@ -247,7 +247,7 @@ test.describe('Topbar commands', () => {
   test.describe('Dialog', () => {
     test('Should allow showing a prompt dialog', async ({ comfyPage }) => {
       await comfyPage.page.evaluate(() => {
-        window['app'].extensionManager.dialog
+        void window['app'].extensionManager.dialog
           .prompt({
             title: 'Test Prompt',
             message: 'Test Prompt Message'
@@ -267,7 +267,7 @@ test.describe('Topbar commands', () => {
       comfyPage
     }) => {
       await comfyPage.page.evaluate(() => {
-        window['app'].extensionManager.dialog
+        void window['app'].extensionManager.dialog
           .confirm({
             title: 'Test Confirm',
             message: 'Test Confirm Message'
@@ -284,7 +284,7 @@ test.describe('Topbar commands', () => {
     test('Should allow dismissing a dialog', async ({ comfyPage }) => {
       await comfyPage.page.evaluate(() => {
         window['value'] = 'foo'
-        window['app'].extensionManager.dialog
+        void window['app'].extensionManager.dialog
           .confirm({
             title: 'Test Confirm',
             message: 'Test Confirm Message'
@@ -327,10 +327,15 @@ test.describe('Topbar commands', () => {
 
       await comfyPage.selectNodes(['CLIP Text Encode (Prompt)'])
 
+      // Wait for selection toolbox to appear
+      await comfyPage.page.waitForSelector('.selection-toolbox', {
+        state: 'visible'
+      })
+
       // Click the command button in the selection toolbox
-      const toolboxButton = comfyPage.page.locator(
-        '.selection-toolbox button:has(.pi-star)'
-      )
+      const toolboxButton = comfyPage.page
+        .locator('.selection-toolbox button:has(.pi-star)')
+        .first()
       await toolboxButton.click()
 
       // Verify the command was executed

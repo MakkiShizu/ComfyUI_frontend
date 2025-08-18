@@ -1,7 +1,7 @@
 <template>
   <Transition name="slide-up" appear>
     <Panel
-      v-if="selectionOverlayState?.visible.value"
+      v-show="selectionOverlayState?.visible.value"
       :key="selectionOverlayState?.updateCount.value"
       class="selection-toolbox absolute left-1/2 rounded-lg"
       :pt="{
