@@ -169,6 +169,8 @@ test.describe('Node Help', () => {
       await comfyPage.page.waitForSelector('.selection-toolbox', {
         state: 'visible'
       })
+      // Wait for animation to complete
+      await comfyPage.page.waitForTimeout(350)
 
       // Click help button
       const helpButton = comfyPage.page
@@ -204,6 +206,8 @@ test.describe('Node Help', () => {
       await comfyPage.page.waitForSelector('.selection-toolbox', {
         state: 'visible'
       })
+      // Wait for animation to complete
+      await comfyPage.page.waitForTimeout(350)
 
       // Click help button
       const helpButton = comfyPage.page
@@ -538,6 +542,8 @@ This is English documentation.
       await comfyPage.page.waitForSelector('.selection-toolbox', {
         state: 'visible'
       })
+      // Wait for animation to complete
+      await comfyPage.page.waitForTimeout(350)
 
       const helpButton = comfyPage.page
         .locator('.selection-toolbox button:has(.pi-question-circle)')
@@ -558,6 +564,8 @@ This is English documentation.
       await comfyPage.page.waitForSelector('.selection-toolbox', {
         state: 'visible'
       })
+      // Wait for animation to complete
+      await comfyPage.page.waitForTimeout(350)
 
       // Click help button again
       const helpButton2 = comfyPage.page

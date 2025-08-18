@@ -192,6 +192,8 @@ test.describe('Remote COMBO Widget', () => {
       await comfyPage.page.waitForSelector('.selection-toolbox', {
         state: 'visible'
       })
+      // Wait for animation to complete
+      await comfyPage.page.waitForTimeout(350)
 
       await expect(
         comfyPage.page.locator('.selection-toolbox .pi-refresh').first()
