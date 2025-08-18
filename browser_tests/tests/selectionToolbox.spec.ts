@@ -108,6 +108,12 @@ test.describe('Selection Toolbox', () => {
     // Select group + node should show bypass button
     await comfyPage.page.focus('canvas')
     await comfyPage.page.keyboard.press('Control+A')
+
+    // Wait for selection toolbox to appear in DOM
+    await comfyPage.page.waitForSelector('.selection-toolbox', {
+      state: 'visible'
+    })
+
     await expect(
       comfyPage.page.locator(
         '.selection-toolbox *[data-testid="bypass-button"]'
@@ -129,6 +135,11 @@ test.describe('Selection Toolbox', () => {
     }) => {
       // Select a node
       await comfyPage.selectNodes(['KSampler'])
+
+      // Wait for selection toolbox to appear
+      await comfyPage.page.waitForSelector('.selection-toolbox', {
+        state: 'visible'
+      })
 
       // Color picker button should be visible
       const colorPickerButton = comfyPage.page.locator(
@@ -166,6 +177,11 @@ test.describe('Selection Toolbox', () => {
       // Select multiple nodes
       await comfyPage.selectNodes(['KSampler', 'CLIP Text Encode (Prompt)'])
 
+      // Wait for selection toolbox to appear
+      await comfyPage.page.waitForSelector('.selection-toolbox', {
+        state: 'visible'
+      })
+
       const colorPickerButton = comfyPage.page.locator(
         '.selection-toolbox .pi-circle-fill'
       )
@@ -189,6 +205,9 @@ test.describe('Selection Toolbox', () => {
     }) => {
       // Select first node and color it
       await comfyPage.selectNodes(['KSampler'])
+      await comfyPage.page.waitForSelector('.selection-toolbox', {
+        state: 'visible'
+      })
       await comfyPage.page.locator('.selection-toolbox .pi-circle-fill').click()
       await comfyPage.page
         .locator('.color-picker-container i[data-testid="blue"]')
@@ -197,6 +216,9 @@ test.describe('Selection Toolbox', () => {
 
       // Select second node and color it differently
       await comfyPage.selectNodes(['CLIP Text Encode (Prompt)'])
+      await comfyPage.page.waitForSelector('.selection-toolbox', {
+        state: 'visible'
+      })
       await comfyPage.page.locator('.selection-toolbox .pi-circle-fill').click()
       await comfyPage.page
         .locator('.color-picker-container i[data-testid="red"]')
@@ -204,6 +226,9 @@ test.describe('Selection Toolbox', () => {
 
       // Select both nodes
       await comfyPage.selectNodes(['KSampler', 'CLIP Text Encode (Prompt)'])
+      await comfyPage.page.waitForSelector('.selection-toolbox', {
+        state: 'visible'
+      })
 
       // Color picker should show null/mixed state
       const colorPickerButton = comfyPage.page.locator(
@@ -217,6 +242,9 @@ test.describe('Selection Toolbox', () => {
     }) => {
       // First color a node
       await comfyPage.selectNodes(['KSampler'])
+      await comfyPage.page.waitForSelector('.selection-toolbox', {
+        state: 'visible'
+      })
       await comfyPage.page.locator('.selection-toolbox .pi-circle-fill').click()
       await comfyPage.page
         .locator('.color-picker-container i[data-testid="blue"]')
@@ -227,6 +255,9 @@ test.describe('Selection Toolbox', () => {
 
       // Re-select the node
       await comfyPage.selectNodes(['KSampler'])
+      await comfyPage.page.waitForSelector('.selection-toolbox', {
+        state: 'visible'
+      })
 
       // Color picker button should show the correct color
       const colorPickerButton = comfyPage.page.locator(
