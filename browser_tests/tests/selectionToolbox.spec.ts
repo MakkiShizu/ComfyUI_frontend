@@ -115,17 +115,17 @@ test.describe('Selection Toolbox', () => {
     })
 
     await expect(
-      comfyPage.page.locator(
-        '.selection-toolbox *[data-testid="bypass-button"]'
-      )
+      comfyPage.page
+        .locator('.selection-toolbox *[data-testid="bypass-button"]')
+        .first()
     ).toBeVisible()
 
     // Deselect node (Only group is selected) should hide bypass button
     await comfyPage.selectNodes(['KSampler'])
     await expect(
-      comfyPage.page.locator(
-        '.selection-toolbox *[data-testid="bypass-button"]'
-      )
+      comfyPage.page
+        .locator('.selection-toolbox *[data-testid="bypass-button"]')
+        .first()
     ).not.toBeVisible()
   })
 
@@ -311,14 +311,23 @@ test.describe('Selection Toolbox', () => {
       await comfyPage.page.keyboard.press('Control+A')
       await comfyPage.nextFrame()
 
+      // Wait for selection toolbox to appear
+      await comfyPage.page.waitForSelector('.selection-toolbox', {
+        state: 'visible'
+      })
+
       // Check if selection toolbox is visible
-      const selectionToolbox = comfyPage.page.locator('.selection-toolbox')
+      const selectionToolbox = comfyPage.page
+        .locator('.selection-toolbox')
+        .first()
       await expect(selectionToolbox).toBeVisible()
 
       // The convert to subgraph button should not be visible when only group is selected
-      const convertButton = comfyPage.page.locator(
-        '.selection-toolbox [data-testid="convert-to-subgraph-button"]'
-      )
+      const convertButton = comfyPage.page
+        .locator(
+          '.selection-toolbox [data-testid="convert-to-subgraph-button"]'
+        )
+        .first()
       await expect(convertButton).not.toBeVisible()
     })
 
@@ -336,10 +345,17 @@ test.describe('Selection Toolbox', () => {
       await comfyPage.page.keyboard.press('Control+A')
       await comfyPage.nextFrame()
 
+      // Wait for selection toolbox to appear
+      await comfyPage.page.waitForSelector('.selection-toolbox', {
+        state: 'visible'
+      })
+
       // The convert to subgraph button should not be visible
-      const convertButton = comfyPage.page.locator(
-        '.selection-toolbox [data-testid="convert-to-subgraph-button"]'
-      )
+      const convertButton = comfyPage.page
+        .locator(
+          '.selection-toolbox [data-testid="convert-to-subgraph-button"]'
+        )
+        .first()
       await expect(convertButton).not.toBeVisible()
     })
 
@@ -391,14 +407,23 @@ test.describe('Selection Toolbox', () => {
       await comfyPage.page.keyboard.press('Control+A')
       await comfyPage.nextFrame()
 
+      // Wait for selection toolbox to appear
+      await comfyPage.page.waitForSelector('.selection-toolbox', {
+        state: 'visible'
+      })
+
       // Check if selection toolbox is visible
-      const selectionToolbox = comfyPage.page.locator('.selection-toolbox')
+      const selectionToolbox = comfyPage.page
+        .locator('.selection-toolbox')
+        .first()
       await expect(selectionToolbox).toBeVisible()
 
       // The convert to subgraph button should be visible
-      const convertButton = comfyPage.page.locator(
-        '.selection-toolbox [data-testid="convert-to-subgraph-button"]'
-      )
+      const convertButton = comfyPage.page
+        .locator(
+          '.selection-toolbox [data-testid="convert-to-subgraph-button"]'
+        )
+        .first()
       await expect(convertButton).toBeVisible()
     })
   })

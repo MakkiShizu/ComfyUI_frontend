@@ -48,9 +48,9 @@ test.describe('Node Help', () => {
       await expect(comfyPage.page.locator('.selection-toolbox')).toBeVisible()
 
       // Click the help button in the selection toolbox
-      const helpButton = comfyPage.page.locator(
-        '.selection-toolbox button:has(.pi-question-circle)'
-      )
+      const helpButton = comfyPage.page
+        .locator('.selection-toolbox button:has(.pi-question-circle)')
+        .first()
       await expect(helpButton).toBeVisible()
       await helpButton.click()
 
@@ -165,10 +165,15 @@ test.describe('Node Help', () => {
       const ksamplerNodes = await comfyPage.getNodeRefsByType('KSampler')
       await selectNodeWithPan(comfyPage, ksamplerNodes[0])
 
+      // Wait for selection toolbox to appear
+      await comfyPage.page.waitForSelector('.selection-toolbox', {
+        state: 'visible'
+      })
+
       // Click help button
-      const helpButton = comfyPage.page.locator(
-        '.selection-toolbox button:has(.pi-question-circle)'
-      )
+      const helpButton = comfyPage.page
+        .locator('.selection-toolbox button:has(.pi-question-circle)')
+        .first()
       await helpButton.click()
 
       // Verify loading spinner is shown
@@ -195,10 +200,15 @@ test.describe('Node Help', () => {
       const ksamplerNodes = await comfyPage.getNodeRefsByType('KSampler')
       await selectNodeWithPan(comfyPage, ksamplerNodes[0])
 
+      // Wait for selection toolbox to appear
+      await comfyPage.page.waitForSelector('.selection-toolbox', {
+        state: 'visible'
+      })
+
       // Click help button
-      const helpButton = comfyPage.page.locator(
-        '.selection-toolbox button:has(.pi-question-circle)'
-      )
+      const helpButton = comfyPage.page
+        .locator('.selection-toolbox button:has(.pi-question-circle)')
+        .first()
       await helpButton.click()
 
       // Verify fallback content is shown (description, inputs, outputs)

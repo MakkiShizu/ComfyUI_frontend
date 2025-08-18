@@ -188,8 +188,13 @@ test.describe('Remote COMBO Widget', () => {
       // Select remote widget node
       await comfyPage.page.keyboard.press('Control+A')
 
+      // Wait for selection toolbox to appear
+      await comfyPage.page.waitForSelector('.selection-toolbox', {
+        state: 'visible'
+      })
+
       await expect(
-        comfyPage.page.locator('.selection-toolbox .pi-refresh')
+        comfyPage.page.locator('.selection-toolbox .pi-refresh').first()
       ).toBeVisible()
     })
 
