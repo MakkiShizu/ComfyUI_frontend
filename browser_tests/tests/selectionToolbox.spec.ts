@@ -283,7 +283,7 @@ test.describe('Selection Toolbox', () => {
       comfyPage
     }) => {
       // Load workflow with a single SubgraphNode
-      await comfyPage.loadWorkflow('subgraph/basic-subgraph')
+      await comfyPage.loadWorkflow('basic-subgraph')
 
       // Click on empty space first to focus it
       await comfyPage.canvas.click({ position: { x: 200, y: 200 } })
@@ -304,7 +304,7 @@ test.describe('Selection Toolbox', () => {
       comfyPage
     }) => {
       // Load workflow with a single SubgraphNode
-      await comfyPage.loadWorkflow('subgraph/basic-subgraph')
+      await comfyPage.loadWorkflow('basic-subgraph')
 
       // Click on empty space first to focus it
       await comfyPage.canvas.click({ position: { x: 200, y: 200 } })
